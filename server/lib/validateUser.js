@@ -5,10 +5,14 @@ export const validateUser = (req, res, next) => {
     if (!username || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
+  }
+
   if (req.path === "/login") {
+    console.log("Validating login for email:", email);
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
   }
+
   next();
-}};
+};

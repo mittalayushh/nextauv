@@ -13,7 +13,7 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
-app.post("/auth/signup", validateUser, async (req, res) => {
+app.post("/signup", validateUser, async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
@@ -34,8 +34,9 @@ app.post("/auth/signup", validateUser, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-app.post("/auth/login", validateUser, async (req, res) => {
+app.post("/login", validateUser, async (req, res) => {
   const { email, password } = req.body;
+  console.log("Login attempt for email:", email);
 
   try {
     const user = await prisma.user.findUnique({ where: { email } });
@@ -47,10 +48,10 @@ app.post("/auth/login", validateUser, async (req, res) => {
       return res.status(400).json({ message: "Invalid email or password" });
 
     const token = generateToken(user);
-    res.status(200).json({ message: "Login successful", token });
+    return res.status(200).json({ message: "Login successful", token });
   } catch (err) {
     console.error("Login error:", err);
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error" });
   }
 });
 const PORT = 4000;
