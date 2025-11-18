@@ -31,8 +31,9 @@ app.post("/signup", validateUser, async (req, res) => {
     const token = generateToken(user);
     res.status(201).json({ message: "Signup successful", token });
   } catch (err) {
-    console.error("Signup error:", err);
-    res.status(500).json({ message: "Server error" });
+    console.error("Signup error:", err.message);
+    console.error("Full error:", err);
+    res.status(500).json({ message: err.message || "Server error" });
   }
 });
 app.post("/login", validateUser, async (req, res) => {
@@ -55,5 +56,5 @@ app.post("/login", validateUser, async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 });
-const PORT = 4000;
+const PORT = 4001;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
