@@ -1,0 +1,147 @@
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+
+export default function SignupPage() {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+  const [form, setForm] = useState({ username: "", email: "", password: "" });
+  const [message, setMessage] = useState("");
+  const router = useRouter();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${API_URL}/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("email", form.email);
+        // Get username from decoded token
+        try {
+          const base64Url = data.token.split(".")[1];
+          const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+          const jsonPayload = decodeURIComponent(
+            atob(base64)
+              .split("")
+              .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+              .join("")
+          );
+          const decoded = JSON.parse(jsonPayload);
+          localStorage.setItem("username", decoded.username);
+        } catch (err) {
+          console.error("Failed to decode token:", err);
+        }
+        setMessage("Signup successful");
+        router.replace("/");
+      } else {
+        setMessage(data.message || "Signup failed");
+      }
+    } catch (err) {
+      console.error(err);
+      setMessage("Server error");
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex bg-black">
+      {/* Left Side - Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-black relative">
+        <div className="w-full max-w-md z-10">
+          <div className="mb-10">
+            <Link href="/" className="inline-block mb-8">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">A</span>
+                </div>
+                <span className="text-white font-bold text-xl">AUV Forum</span>
+              </div>
+            </Link>
+            <h1 className="text-4xl font-bold text-white tracking-tight mb-3">Create an account</h1>
+            <p className="text-gray-400">Start your journey with us today.</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Username</label>
+              <input
+                type="text"
+                className="w-full bg-gray-900 border border-gray-800 text-gray-100 p-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder-gray-600"
+                placeholder="Choose a username"
+                value={form.username}
+                onChange={(e) => setForm({ ...form, username: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Email address</label>
+              <input
+                type="email"
+                className="w-full bg-gray-900 border border-gray-800 text-gray-100 p-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder-gray-600"
+                placeholder="Enter your email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+              <input
+                type="password"
+                className="w-full bg-gray-900 border border-gray-800 text-gray-100 p-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder-gray-600"
+                placeholder="Create a password"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 bg-white hover:bg-gray-100 text-black font-bold rounded-lg transition-all"
+            >
+              Sign Up
+            </button>
+
+            {message && (
+              <div className={`p-3 rounded-lg text-sm text-center font-medium ${message.includes("successful") ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
+                {message}
+              </div>
+            )}
+          </form>
+
+          <div className="mt-8 text-center">
+            <p className="text-gray-400 text-sm">
+              Already have an account?{" "}
+              <Link href="/login" className="text-white font-semibold hover:underline transition">
+                Log in
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Side - Image */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gray-900">
+        <img
+          src="/auv-bg.png"
+          alt="Autonomous Underwater Vehicle"
+          className="w-full h-full object-cover opacity-80"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+        <div className="absolute bottom-0 left-0 p-16 z-20 w-full">
+          <blockquote className="text-2xl font-medium text-white mb-4">
+            "Exploration is the engine that drives innovation. Join us in mapping the unknown."
+          </blockquote>
+          <p className="text-gray-400 font-medium">
+            — AUV Forum Community
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
