@@ -1,15 +1,15 @@
-import 'dotenv/config'; 
+import 'dotenv/config';
 import express from "express";
 import cors from "cors";
 import bcrypt from "bcryptjs";
-import  prisma  from "./lib/prisma.js";
+import prisma from "./lib/prisma.js";
 import { validateUser } from "./lib/validateUser.js";
 import { authenticate } from "./lib/auth.js";
 import { generateToken } from "./jwt.js";
 
 const app = express();
 app.use(cors({
-    origin: ["http://localhost:3000","https://nextauv.vercel.app"],
+  origin: ["http://localhost:3000", "https://nextauv.vercel.app"],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
 }));

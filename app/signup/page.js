@@ -49,73 +49,98 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-900 to-black text-gray-100">
-      <div className="w-[400px] bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-700">
-        <h1 className="text-3xl font-bold text-center mb-6 text-white tracking-wide">
-          Create an Account
-        </h1>
-        <p className="text-center text-sm text-gray-400 mb-8">
-          Join and start your journey today
-        </p>
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block text-sm mb-1">Username</label>
-            <input
-              type="text"
-              className="w-full bg-gray-900 border border-gray-700 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="Enter your username"
-              value={form.username}
-              onChange={(e) => setForm({ ...form, username: e.target.value })}
-            />
+    <div className="min-h-screen flex bg-black">
+      {/* Left Side - Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-black relative">
+        <div className="w-full max-w-md z-10">
+          <div className="mb-10">
+            <Link href="/" className="inline-block mb-8">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">A</span>
+                </div>
+                <span className="text-white font-bold text-xl">AUV Forum</span>
+              </div>
+            </Link>
+            <h1 className="text-4xl font-bold text-white tracking-tight mb-3">Create an account</h1>
+            <p className="text-gray-400">Start your journey with us today.</p>
           </div>
 
-          <div>
-            <label className="block text-sm mb-1">Email</label>
-            <input
-              type="email"
-              className="w-full bg-gray-900 border border-gray-700 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="Enter your email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Username</label>
+              <input
+                type="text"
+                className="w-full bg-gray-900 border border-gray-800 text-gray-100 p-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder-gray-600"
+                placeholder="Choose a username"
+                value={form.username}
+                onChange={(e) => setForm({ ...form, username: e.target.value })}
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm mb-1">Password</label>
-            <input
-              type="password"
-              className="w-full bg-gray-900 border border-gray-700 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="Create a password"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Email address</label>
+              <input
+                type="email"
+                className="w-full bg-gray-900 border border-gray-800 text-gray-100 p-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder-gray-600"
+                placeholder="Enter your email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+              />
+            </div>
 
-          <button
-            type="submit"
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 transition rounded-md text-white font-semibold"
-          >
-            Sign Up
-          </button>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+              <input
+                type="password"
+                className="w-full bg-gray-900 border border-gray-800 text-gray-100 p-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder-gray-600"
+                placeholder="Create a password"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+              />
+            </div>
 
-          {message && (
-            <p
-              className={`text-center text-sm ${
-                message.includes("successful") ? "text-green-400" : "text-red-400"
-              }`}
+            <button
+              type="submit"
+              className="w-full py-3 bg-white hover:bg-gray-100 text-black font-bold rounded-lg transition-all"
             >
-              {message}
-            </p>
-          )}
-        </form>
+              Sign Up
+            </button>
 
-        <p className="text-center mt-6 text-gray-400 text-sm">
-          Already have an account?{" "}
-          <Link href="/login" className="text-indigo-400 hover:underline">
-            Log in
-          </Link>
-        </p>
+            {message && (
+              <div className={`p-3 rounded-lg text-sm text-center font-medium ${message.includes("successful") ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
+                {message}
+              </div>
+            )}
+          </form>
+
+          <div className="mt-8 text-center">
+            <p className="text-gray-400 text-sm">
+              Already have an account?{" "}
+              <Link href="/login" className="text-white font-semibold hover:underline transition">
+                Log in
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Side - Image */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gray-900">
+        <img
+          src="/auv-bg.png"
+          alt="Autonomous Underwater Vehicle"
+          className="w-full h-full object-cover opacity-80"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+        <div className="absolute bottom-0 left-0 p-16 z-20 w-full">
+          <blockquote className="text-2xl font-medium text-white mb-4">
+            "Exploration is the engine that drives innovation. Join us in mapping the unknown."
+          </blockquote>
+          <p className="text-gray-400 font-medium">
+            — AUV Forum Community
+          </p>
+        </div>
       </div>
     </div>
   );
