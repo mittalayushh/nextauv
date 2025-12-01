@@ -43,41 +43,43 @@ export default function Navbar({ user, onSignOut }) {
               <button className="p-2 text-gray-400 hover:bg-gray-800 rounded-full transition">
                 <IconBell size={20} />
               </button>
-              <button className="p-2 text-gray-400 hover:bg-gray-800 rounded-full transition">
-                <IconPlus size={20} />
-              </button>
+              <Link href="/create-post">
+                <button className="p-2 text-gray-400 hover:bg-gray-800 rounded-full transition">
+                  <IconPlus size={20} />
+                </button>
+              </Link>
             </div>
 
-        <div className="relative group">
-          <div className="flex items-center gap-2 p-1 pr-2 hover:bg-gray-800 rounded-lg border border-transparent hover:border-gray-700 transition cursor-pointer">
-            <div className="w-8 h-8 bg-gray-700 rounded-md flex items-center justify-center text-white font-semibold">
-              {user.username?.[0]?.toUpperCase() || "U"}
-            </div>
-            <div className="hidden lg:block text-left">
-              <p className="text-xs font-medium text-white">{user.username}</p>
-              <p className="text-[10px] text-gray-400">1 karma</p>
-            </div>
-          </div>
+            <div className="relative group">
+              <div className="flex items-center gap-2 p-1 pr-2 hover:bg-gray-800 rounded-lg border border-transparent hover:border-gray-700 transition cursor-pointer">
+                <div className="w-8 h-8 bg-gray-700 rounded-md flex items-center justify-center text-white font-semibold">
+                  {user.username?.[0]?.toUpperCase() || "U"}
+                </div>
+                <div className="hidden lg:block text-left">
+                  <p className="text-xs font-medium text-white">{user.username}</p>
+                  <p className="text-[10px] text-gray-400">1 karma</p>
+                </div>
+              </div>
 
-          {/* Stays open when hovering dropdown */}
-          <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150">
-            <div className="px-4 py-2 border-b border-gray-700">
-              <p className="text-sm text-white font-medium">My Stuff</p>
-              <p className="text-xs text-gray-400">Online Status: On</p>
+              {/* Stays open when hovering dropdown */}
+              <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150">
+                <div className="px-4 py-2 border-b border-gray-700">
+                  <p className="text-sm text-white font-medium">My Stuff</p>
+                  <p className="text-xs text-gray-400">Online Status: On</p>
+                </div>
+
+                <Link href="/profile" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">
+                  Profile
+                </Link>
+
+                <button
+                  onClick={onSignOut}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                >
+                  Log Out
+                </button>
+              </div>
             </div>
-
-            <Link href="/profile" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">
-              Profile
-            </Link>
-
-            <button
-              onClick={onSignOut}
-              className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
-            >
-              Log Out
-            </button>
-          </div>
-        </div>
 
           </>
         ) : (
