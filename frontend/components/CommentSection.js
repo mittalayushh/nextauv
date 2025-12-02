@@ -30,7 +30,7 @@ export default function CommentSection({ comments, postId, onCommentAdded }) {
         return;
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001"}/api/posts/${postId}/comments`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001"}posts/${postId}/comments`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -65,7 +65,7 @@ export default function CommentSection({ comments, postId, onCommentAdded }) {
         onClick: async () => {
           try {
             const token = localStorage.getItem("token");
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001"}/api/comments/${commentId}`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001"}/comments/${commentId}`, {
               method: "DELETE",
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -94,7 +94,7 @@ export default function CommentSection({ comments, postId, onCommentAdded }) {
   const handleUpdate = async (commentId) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001"}/api/comments/${commentId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001"}/comments/${commentId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
