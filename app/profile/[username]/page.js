@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import PostCard from "@/components/PostCard";
 import ProfileSidebar from "@/components/ProfileSidebar";
@@ -11,7 +11,16 @@ import { IconGhost } from "@tabler/icons-react";
 export default function ProfilePage() {
   const { username } = useParams();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("overview");
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+
+  const [activeTab, setActiveTab] = useState(tabParam || "overview");
+
+  useEffect(() => {
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
   const [userData, setUserData] = useState(null);
   const [content, setContent] = useState([]);
   const [loadingProfile, setLoadingProfile] = useState(true);

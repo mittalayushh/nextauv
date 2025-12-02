@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { IconPhoto, IconLink } from "@tabler/icons-react";
+import { IconPhoto, IconLink, IconSearch } from "@tabler/icons-react";
 import PostCard from "./PostCard";
 import Link from "next/link";
 import PostSkeleton from "./PostSkeleton";
@@ -13,7 +13,9 @@ export default function Feed() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [sortBy, setSortBy] = useState("newest"); // New state for sorting
+  const [sortBy, setSortBy] = useState("newest");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedTag, setSelectedTag] = useState("");
   const searchParams = useSearchParams();
   const search = searchParams.get("search") || "";
 
@@ -21,7 +23,9 @@ export default function Feed() {
     try {
       setLoading(true);
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001";
-      const apiUrl = `${baseUrl}/api/posts?page=${page}&limit=5&search=${encodeURIComponent(search)}&sort=${sortBy}`;
+      let apiUrl = `${baseUrl}/api/posts?page=${page}&limit=5&search=${encodeURIComponent(search)}&sort=${sortBy}`;
+      if (selectedCategory) apiUrl += `&category=${encodeURIComponent(selectedCategory)}`;
+      if (selectedTag) apiUrl += `&tag=${encodeURIComponent(selectedTag)}`;
 
       console.log("Fetching posts from:", apiUrl);
       const token = localStorage.getItem("token");
@@ -55,7 +59,7 @@ export default function Feed() {
   useEffect(() => {
     setCurrentPage(1);
     fetchPosts(1);
-  }, [search, sortBy]); // Fetch when search or sort changes
+  }, [search, sortBy, selectedCategory, selectedTag]);
 
   useEffect(() => {
     fetchPosts(currentPage);
@@ -66,85 +70,129 @@ export default function Feed() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const categories = ["General", "Q&A", "Showcase", "Discussion"];
+
   return (
-    <div className="max-w-3xl mx-auto py-4 px-2 sm:px-4">
+    <div className="max-w-3xl mx-auto py-6 px-4 sm:px-6 space-y-6">
       {/* Create Post Input */}
-      <div className="bg-gray-800 border border-gray-700 rounded-lg p-3 mb-4 flex items-center gap-3">
-        <div className="w-9 h-9 bg-gray-700 rounded-full flex-shrink-0 overflow-hidden">
-          <div className="w-full h-full bg-indigo-600 flex items-center justify-center text-white font-bold">U</div>
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 flex items-center gap-4 shadow-sm">
+        <div className="w-10 h-10 bg-indigo-600 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-500/20">
+          U
         </div>
 
         <Link href="/create-post" className="flex-1">
           <input
             type="text"
-            placeholder="Create Post"
-            className="w-full bg-gray-900 border border-gray-700 hover:bg-gray-900/80 hover:border-gray-600 rounded-md px-4 py-2 text-sm text-gray-300 focus:outline-none transition cursor-pointer"
+            placeholder="What's on your mind?"
+            className="w-full bg-gray-950 border border-gray-800 hover:bg-black hover:border-gray-700 rounded-xl px-5 py-3 text-sm text-gray-300 focus:outline-none transition-all cursor-pointer shadow-inner"
             readOnly
           />
         </Link>
 
-        <Link href="/create-post">
-          <button className="p-2 text-gray-400 hover:bg-gray-700 rounded-md transition">
-            <IconPhoto size={20} />
-          </button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/create-post">
+            <button className="p-2.5 text-gray-400 hover:bg-gray-800 hover:text-indigo-400 rounded-xl transition-all duration-200">
+              <IconPhoto size={22} />
+            </button>
+          </Link>
 
-        <Link href="/create-post">
-          <button className="p-2 text-gray-400 hover:bg-gray-700 rounded-md transition">
-            <IconLink size={20} />
-          </button>
-        </Link>
+          <Link href="/create-post">
+            <button className="p-2.5 text-gray-400 hover:bg-gray-800 hover:text-indigo-400 rounded-xl transition-all duration-200">
+              <IconLink size={22} />
+            </button>
+          </Link>
+        </div>
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-gray-800 border border-gray-700 rounded-lg p-3 mb-4 flex items-center gap-4 text-sm font-bold text-gray-400 overflow-x-auto">
-        <button
-          onClick={() => setSortBy("newest")}
-          className={`px-3 py-1 rounded-full whitespace-nowrap transition ${sortBy === "newest" ? "text-indigo-400 bg-gray-700/50" : "hover:bg-gray-700"}`}
-        >
-          New
-        </button>
-        <button
-          onClick={() => setSortBy("top")}
-          className={`px-3 py-1 rounded-full whitespace-nowrap transition ${sortBy === "top" ? "text-indigo-400 bg-gray-700/50" : "hover:bg-gray-700"}`}
-        >
-          Top
-        </button>
-        <button
-          onClick={() => setSortBy("oldest")}
-          className={`px-3 py-1 rounded-full whitespace-nowrap transition ${sortBy === "oldest" ? "text-indigo-400 bg-gray-700/50" : "hover:bg-gray-700"}`}
-        >
-          Oldest
-        </button>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center bg-gray-900 p-1 rounded-xl border border-gray-800">
+          <button
+            onClick={() => setSortBy("hot")}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 ${sortBy === "hot" ? "bg-gray-800 text-white shadow-sm" : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"}`}
+          >
+            Hot
+          </button>
+          <button
+            onClick={() => setSortBy("newest")}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 ${sortBy === "newest" ? "bg-gray-800 text-white shadow-sm" : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"}`}
+          >
+            New
+          </button>
+          <button
+            onClick={() => setSortBy("top")}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 ${sortBy === "top" ? "bg-gray-800 text-white shadow-sm" : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"}`}
+          >
+            Top
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2 overflow-x-auto max-w-full pb-2 sm:pb-0 scrollbar-hide">
+          <button
+            onClick={() => setSelectedCategory("")}
+            className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 border ${selectedCategory === "" ? "bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/20" : "bg-gray-900 border-gray-800 text-gray-400 hover:border-gray-600 hover:text-gray-200"}`}
+          >
+            All
+          </button>
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 border ${selectedCategory === cat ? "bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/20" : "bg-gray-900 border-gray-800 text-gray-400 hover:border-gray-600 hover:text-gray-200"}`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Posts Feed */}
-      <div className="space-y-4">
+      <div className="space-y-4 min-h-[500px]">
         {loading ? (
-          <>
-            <PostSkeleton />
-            <PostSkeleton />
-            <PostSkeleton />
-          </>
+          // Skeleton Loading
+          [...Array(3)].map((_, i) => (
+            <div key={i} className="bg-gray-900 border border-gray-800 rounded-2xl p-6 animate-pulse">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-10 h-10 bg-gray-800 rounded-full"></div>
+                <div className="space-y-2">
+                  <div className="h-4 bg-gray-800 rounded w-32"></div>
+                  <div className="h-3 bg-gray-800 rounded w-24"></div>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="h-4 bg-gray-800 rounded w-3/4"></div>
+                <div className="h-4 bg-gray-800 rounded w-full"></div>
+                <div className="h-4 bg-gray-800 rounded w-5/6"></div>
+              </div>
+            </div>
+          ))
         ) : posts.length > 0 ? (
-          <>
-            {posts.map((post) => <PostCard key={post.id} post={post} />)}
-
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
-          </>
+          posts.map((post) => (
+            <PostCard key={post.id} post={post} />
+          ))
         ) : (
-          <div className="text-center py-10 text-gray-500">
-            <p>No posts yet. Be the first to create one!</p>
-            <Link href="/create-post" className="text-indigo-400 hover:underline mt-2 inline-block">
-              Create Post
-            </Link>
+          <div className="text-center py-20 bg-gray-900 border border-gray-800 rounded-2xl">
+            <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+              <IconSearch size={32} className="text-gray-500" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2">No posts found</h3>
+            <p className="text-gray-400 max-w-md mx-auto">
+              We couldn't find any posts matching your criteria. Try adjusting your filters or search query.
+            </p>
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center pt-8 pb-12">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        </div>
+      )}
     </div>
   );
 }

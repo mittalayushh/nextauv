@@ -282,9 +282,11 @@ export default function PostCard({ post, onDelete }) {
         {post.tags && post.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-3">
             {post.tags.map((tag, index) => (
-              <span key={index} className="bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full text-xs border border-gray-600">
-                {tag}
-              </span>
+              <Link key={index} href={`/?tag=${encodeURIComponent(tag)}`}>
+                <span className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-0.5 rounded-full text-xs border border-gray-600 transition cursor-pointer">
+                  {tag}
+                </span>
+              </Link>
             ))}
           </div>
         )}

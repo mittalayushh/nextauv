@@ -204,7 +204,7 @@ export default function CreatePostForm() {
             <div className="space-y-6">
               <div className="space-y-2">
                 <p className="font-sans text-gray-900">Publishing to: <span className="font-bold">Ayush Mittal</span></p>
-                <p className="font-sans text-sm text-gray-500">Add or change topics (up to 5) so readers know what your story is about</p>
+                <p className="font-sans text-sm text-gray-500">Add or change topics so readers know what your story is about</p>
                 <TagSelector selectedTags={tags} setSelectedTags={setTags} compact={true} />
               </div>
 

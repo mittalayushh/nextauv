@@ -76,7 +76,7 @@ export default function TagSelector({ selectedTags, setSelectedTags, compact = f
     ).slice(0, 10); // Limit suggestions
 
   const addTag = (tag) => {
-    if (selectedTags.length < 5 && !selectedTags.includes(tag)) {
+    if (!selectedTags.includes(tag)) {
       setSelectedTags([...selectedTags, tag]);
       setQuery("");
       // Keep open for multiple selections if compact
@@ -93,10 +93,10 @@ export default function TagSelector({ selectedTags, setSelectedTags, compact = f
       {!compact && (
         <>
           <label className="block text-sm font-medium text-gray-300 mb-1">
-            Select Tags (Up to 5)
+            Select Topics
           </label>
           <p className="text-xs text-gray-500 mb-2">
-            Tags help others find your content. Select up to five that best describe your post.
+            Topics help others find your content. Select topics that best describe your post.
           </p>
         </>
       )}
@@ -129,14 +129,13 @@ export default function TagSelector({ selectedTags, setSelectedTags, compact = f
         <input
           type="text"
           className={`block w-full pl-10 pr-3 py-2 border border-gray-700 rounded-lg leading-5 bg-gray-900 text-gray-300 placeholder-gray-500 focus:outline-none focus:bg-gray-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm transition duration-150 ease-in-out ${compact ? 'text-xs' : ''}`}
-          placeholder={compact ? "Search tags..." : "Search for tags..."}
+          placeholder={compact ? "Search topics..." : "Search for topics..."}
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
             setIsOpen(true);
           }}
           onFocus={() => setIsOpen(true)}
-          disabled={selectedTags.length >= 5}
           autoFocus={compact}
         />
 
@@ -145,7 +144,7 @@ export default function TagSelector({ selectedTags, setSelectedTags, compact = f
           <div className="absolute z-10 mt-1 w-full bg-gray-800 shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm border border-gray-700">
             {filteredTags.length === 0 ? (
               <div className="cursor-default select-none relative py-2 px-4 text-gray-500">
-                No tags found.
+                No topics found.
               </div>
             ) : (
               filteredTags.map((tag) => (
@@ -161,9 +160,6 @@ export default function TagSelector({ selectedTags, setSelectedTags, compact = f
           </div>
         )}
       </div>
-      {selectedTags.length >= 5 && (
-        <p className="text-xs text-yellow-500 mt-1">Maximum of 5 tags reached.</p>
-      )}
     </div>
   );
 }

@@ -51,7 +51,7 @@ export default function Home() {
       <Navbar user={user} onSignOut={handleSignOut} />
 
       <div className="max-w-[1800px] mx-auto flex justify-center">
-        <Sidebar />
+        <Sidebar user={user} onSignOut={handleSignOut} />
 
         <main className="flex-1 w-full md:max-w-3xl xl:max-w-4xl">
           <Feed />
