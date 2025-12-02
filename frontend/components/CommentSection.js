@@ -30,7 +30,7 @@ export default function CommentSection({ comments, postId, onCommentAdded }) {
         return;
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001"} /api/posts / ${postId}/comments`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001"}/api/posts/${postId}/comments`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -59,28 +59,36 @@ export default function CommentSection({ comments, postId, onCommentAdded }) {
   };
 
   const handleDelete = async (commentId) => {
-    if (!confirm("Are you sure you want to delete this comment?")) return;
+    toast("Are you sure you want to delete this comment?", {
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001"}/api/comments/${commentId}`, {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
 
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001"}/api/comments/${commentId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
+            if (res.ok) {
+              toast.success("Comment deleted");
+              // Ideally reload or update state. For now, reload page or rely on parent refetch
+              window.location.reload();
+            } else {
+              toast.error("Failed to delete comment");
+            }
+          } catch (err) {
+            console.error("Delete error:", err);
+            toast.error("Failed to delete comment");
+          }
         },
-      });
-
-      if (res.ok) {
-        toast.success("Comment deleted");
-        // Ideally reload or update state. For now, reload page or rely on parent refetch
-        window.location.reload();
-      } else {
-        toast.error("Failed to delete comment");
-      }
-    } catch (err) {
-      console.error("Delete error:", err);
-      toast.error("Failed to delete comment");
-    }
+      },
+      cancel: {
+        label: "Cancel",
+      },
+    });
   };
 
   const handleUpdate = async (commentId) => {

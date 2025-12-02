@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import PostCard from "@/components/PostCard";
 import CommentSection from "@/components/CommentSection";
@@ -8,16 +8,26 @@ import PostSkeleton from "@/components/PostSkeleton";
 
 export default function PostPage() {
   const { id } = useParams();
+  const router = useRouter();
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
+    // Session Hydration
+    const token = localStorage.getItem("token");
+    const email = localStorage.getItem("email");
+    const username = localStorage.getItem("username");
+
+    if (token && email && username) {
+      setUser({ email, username, token });
+    }
+
     const fetchData = async () => {
       try {
         const baseUrl = process.env.NODE_ENV === "development" ? "http://localhost:4001" : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001");
 
-        const token = localStorage.getItem("token");
         const headers = {
           "Content-Type": "application/json",
         };
@@ -50,18 +60,22 @@ export default function PostPage() {
     }
   }, [id]);
 
+  const handleSignOut = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("email");
+    localStorage.removeItem("username");
+    setUser(null);
+    router.replace("/login");
+  };
+
   const handleCommentAdded = (newComment) => {
-    // Re-fetch comments or append locally
-    // For simplicity, let's append locally. 
-    // Note: If it's a reply, we need to find parent and append.
-    // But since we flatten list and rebuild tree, we can just push to list.
     setComments((prev) => [...prev, newComment]);
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-gray-100">
-        <Navbar />
+        <Navbar user={user} onSignOut={handleSignOut} />
         <div className="max-w-3xl mx-auto py-8 px-4">
           <PostSkeleton />
         </div>
@@ -79,7 +93,7 @@ export default function PostPage() {
 
   return (
     <div className="min-h-screen bg-black text-gray-100">
-      <Navbar />
+      <Navbar user={user} onSignOut={handleSignOut} />
       <div className="max-w-3xl mx-auto py-8 px-4">
         <PostCard post={post} />
         <div className="mt-6">

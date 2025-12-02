@@ -108,30 +108,36 @@ export default function PostCard({ post, onDelete }) {
     e.preventDefault();
     e.stopPropagation();
 
-    // Use a custom toast for confirmation or just standard confirm for now (user asked for graceful handling of ERRORS, confirm is UX)
-    // But let's stick to confirm for safety, it's standard.
-    if (!confirm("Are you sure you want to delete this post?")) return;
+    toast("Are you sure you want to delete this post?", {
+      action: {
+        label: "Delete",
+        onClick: async () => {
+          try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001"}/api/posts/${post.id}`, {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
 
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001"}/api/posts/${post.id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
+            if (res.ok) {
+              setIsDeleted(true);
+              toast.success("Post deleted successfully");
+              if (onDelete) onDelete(post.id);
+            } else {
+              toast.error("Failed to delete post");
+            }
+          } catch (err) {
+            console.error("Delete error:", err);
+            toast.error("Failed to delete post");
+          }
         },
-      });
-
-      if (res.ok) {
-        setIsDeleted(true);
-        toast.success("Post deleted successfully");
-        if (onDelete) onDelete(post.id);
-      } else {
-        toast.error("Failed to delete post");
-      }
-    } catch (err) {
-      console.error("Delete error:", err);
-      toast.error("Failed to delete post");
-    }
+      },
+      cancel: {
+        label: "Cancel",
+      },
+    });
   };
 
   const handleUpdate = async (e) => {
