@@ -2,61 +2,16 @@
 import { useState, useEffect, useRef } from "react";
 import { IconX, IconSearch } from "@tabler/icons-react";
 
-const AUV_TAGS = {
-  "Navigation & Localization": [
-    "SLAM", "EKF", "UKF", "DVL", "INS", "IMU", "GPS-denied", "Acoustic Localization",
-    "USBL", "LBL", "Dead Reckoning", "Odometry", "Vision SLAM", "Sonar SLAM",
-    "Loop Closure", "Sensor Fusion", "Multi-sensor Integration", "Depth Sensing",
-    "Pressure Sensor", "Magnetometer", "Heading Estimation", "Pose Estimation",
-    "Localization Drift", "Calibration", "Noise Filtering"
-  ],
-  "Control & Mission Planning": [
-    "PID", "MPC (Model Predictive Control)", "LQR", "Path Planning", "Trajectory Optimization",
-    "Obstacle Avoidance", "Station Keeping", "Dynamic Positioning", "Waypoints",
-    "Auto-dive", "Auto-return", "Heading Control", "Buoyancy Control", "Ballast",
-    "Thruster Mapping", "Thruster Control", "Actuation", "Control Loops", "Setpoints",
-    "Teleoperation"
-  ],
-  "Perception & Sensors": [
-    "Sonar", "Multibeam Sonar", "Side Scan Sonar", "Forward-Looking Sonar", "Camera",
-    "Underwater Vision", "Color Correction", "Object Detection", "Object Tracking",
-    "AprilTags", "AR Markers", "Hydrophone", "Acoustic Processing", "Denoising",
-    "Underwater Lighting", "Optical Flow", "Feature Extraction", "Image Enhancement",
-    "Segmentation", "Deep Learning"
-  ],
-  "Software & Middleware": [
-    "ROS", "ROS 2", "ROS2 Jazzy", "ROS2 Humble", "Gazebo", "Gazebo Garden",
-    "Ignition", "Unity Simulation", "ArduSub", "BlueOS", "MAVLink", "DDS",
-    "Cyclone DDS", "FastDDS", "PX4", "Python", "C++", "Docker", "Ubuntu", "Jetson SDK"
-  ],
-  "Hardware": [
-    "Thrusters", "T200", "T500", "Servos", "Battery", "Power Management", "ESC",
-    "Waterproofing", "Connectors", "Blue Robotics", "Watertight Enclosures",
-    "Pressure Hull", "Mechanical Design", "Hydrodynamics", "CFD", "Buoyancy",
-    "Frame Design", "Material Selection", "3D Printing", "Heat Dissipation",
-    "Motor Drivers", "PCB Design", "Sensors", "Electronics", "Wiring Harness"
-  ],
-  "Autonomy & AI": [
-    "Behavior Trees", "Mission Planning", "Reinforcement Learning", "Neural Networks",
-    "Underwater Dataset", "PoseNet", "Object Recognition", "Mapping", "Planning", "AI Control"
-  ],
-  "Communications": [
-    "LoRa", "Acoustic Modems", "Wi-Fi", "Tethered Communication", "Ethernet",
-    "Serial", "CAN", "RS485", "Telemetry", "Network Setup"
-  ],
-  "Competitions & Teams": [
-    "RoboSub", "SAUVC", "NIOT Competition", "TechFest Water Robotics",
-    "Team Recruitment", "TDR", "Systems Engineering", "Team Management",
-    "Testing", "Field Trials"
-  ]
-};
-
-// Flatten tags for search
-const ALL_TAGS = Object.values(AUV_TAGS).flat();
+// Fallback tags if API fails or is empty initially
+const FALLBACK_TAGS = [
+  "SLAM", "ROS", "Python", "Computer Vision", "Control Systems",
+  "Sensors", "Hardware", "Autonomy", "Machine Learning", "Robotics"
+];
 
 export default function TagSelector({ selectedTags, setSelectedTags, compact = false }) {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [suggestedTopics, setSuggestedTopics] = useState([]);
   const wrapperRef = useRef(null);
 
   useEffect(() => {
@@ -69,17 +24,37 @@ export default function TagSelector({ selectedTags, setSelectedTags, compact = f
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [wrapperRef]);
 
-  const filteredTags = query === ""
-    ? []
-    : ALL_TAGS.filter((tag) =>
-      tag.toLowerCase().includes(query.toLowerCase()) && !selectedTags.includes(tag)
-    ).slice(0, 10); // Limit suggestions
+  // Fetch topics from backend
+  useEffect(() => {
+    const fetchTopics = async () => {
+      try {
+        const envApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001";
+        const res = await fetch(`${envApiUrl}/api/topics?search=${encodeURIComponent(query)}&limit=10`);
+        if (res.ok) {
+          const data = await res.json();
+          setSuggestedTopics(data.map(t => t.name));
+        } else {
+          // Fallback to local filtering if API fails
+          setSuggestedTopics(FALLBACK_TAGS.filter(t => t.toLowerCase().includes(query.toLowerCase())));
+        }
+      } catch (error) {
+        console.error("Failed to fetch topics:", error);
+        setSuggestedTopics(FALLBACK_TAGS.filter(t => t.toLowerCase().includes(query.toLowerCase())));
+      }
+    };
+
+    // Debounce fetch
+    const timeoutId = setTimeout(() => {
+      fetchTopics();
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [query]);
 
   const addTag = (tag) => {
     if (!selectedTags.includes(tag)) {
       setSelectedTags([...selectedTags, tag]);
       setQuery("");
-      // Keep open for multiple selections if compact
       if (!compact) setIsOpen(false);
     }
   };
@@ -87,6 +62,9 @@ export default function TagSelector({ selectedTags, setSelectedTags, compact = f
   const removeTag = (tagToRemove) => {
     setSelectedTags(selectedTags.filter((tag) => tag !== tagToRemove));
   };
+
+  // Filter out already selected tags from suggestions
+  const filteredSuggestions = suggestedTopics.filter(tag => !selectedTags.includes(tag));
 
   return (
     <div className="relative" ref={wrapperRef}>
@@ -101,26 +79,24 @@ export default function TagSelector({ selectedTags, setSelectedTags, compact = f
         </>
       )}
 
-      {/* Selected Tags (only show here if NOT compact, or if you want them inside the selector) */}
-      {!compact && (
-        <div className="flex flex-wrap gap-2 mb-2">
-          {selectedTags.map((tag) => (
-            <span
-              key={tag}
-              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-900/50 text-indigo-200 border border-indigo-700/50"
+      {/* Selected Tags */}
+      <div className="flex flex-wrap gap-2 mb-2">
+        {selectedTags.map((tag) => (
+          <span
+            key={tag}
+            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-900/50 text-indigo-200 border border-indigo-700/50"
+          >
+            {tag}
+            <button
+              type="button"
+              onClick={() => removeTag(tag)}
+              className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-indigo-400 hover:bg-indigo-800 hover:text-white focus:outline-none"
             >
-              {tag}
-              <button
-                type="button"
-                onClick={() => removeTag(tag)}
-                className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full text-indigo-400 hover:bg-indigo-800 hover:text-white focus:outline-none"
-              >
-                <IconX size={12} />
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
+              <IconX size={12} />
+            </button>
+          </span>
+        ))}
+      </div>
 
       <div className="relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -140,14 +116,21 @@ export default function TagSelector({ selectedTags, setSelectedTags, compact = f
         />
 
         {/* Dropdown results */}
-        {isOpen && query.length > 0 && (
+        {isOpen && (
           <div className="absolute z-10 mt-1 w-full bg-gray-800 shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm border border-gray-700">
-            {filteredTags.length === 0 ? (
+            {filteredSuggestions.length === 0 && query.length > 0 ? (
+              <div
+                className="cursor-pointer select-none relative py-2 px-4 text-indigo-400 hover:bg-gray-700"
+                onClick={() => addTag(query)}
+              >
+                Create topic "{query}"
+              </div>
+            ) : filteredSuggestions.length === 0 ? (
               <div className="cursor-default select-none relative py-2 px-4 text-gray-500">
-                No topics found.
+                Type to search...
               </div>
             ) : (
-              filteredTags.map((tag) => (
+              filteredSuggestions.map((tag) => (
                 <div
                   key={tag}
                   className="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-gray-700 text-gray-300"

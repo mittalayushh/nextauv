@@ -69,10 +69,13 @@ export default function PostCard({ post, onDelete }) {
         body: JSON.stringify({ value }),
       });
 
-      if (!res.ok) throw new Error("Failed to vote");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Failed to vote");
+      }
     } catch (err) {
       console.error("Vote error:", err);
-      toast.error("Failed to vote");
+      toast.error(err.message || "Failed to vote");
       setUserVote(previousVote);
       setVoteCount(previousCount);
     }

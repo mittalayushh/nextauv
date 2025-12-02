@@ -72,6 +72,47 @@ export default function Feed() {
 
   const categories = ["General", "Q&A", "Showcase", "Discussion"];
 
+  const [matchedTopics, setMatchedTopics] = useState([]);
+  const [trendingTopics, setTrendingTopics] = useState([]);
+
+  // Fetch trending topics
+  useEffect(() => {
+    const fetchTrendingTopics = async () => {
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001";
+        const res = await fetch(`${baseUrl}/api/topics?limit=5`);
+        if (res.ok) {
+          const data = await res.json();
+          setTrendingTopics(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch trending topics:", error);
+      }
+    };
+    fetchTrendingTopics();
+  }, []);
+
+  // Fetch matching topics when searching
+  useEffect(() => {
+    const fetchMatchingTopics = async () => {
+      if (!search) {
+        setMatchedTopics([]);
+        return;
+      }
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001";
+        const res = await fetch(`${baseUrl}/api/topics?search=${encodeURIComponent(search)}&limit=3`);
+        if (res.ok) {
+          const data = await res.json();
+          setMatchedTopics(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch matching topics:", error);
+      }
+    };
+    fetchMatchingTopics();
+  }, [search]);
+
   return (
     <div className="max-w-3xl mx-auto py-6 px-4 sm:px-6 space-y-6">
       {/* Create Post Input */}
@@ -104,46 +145,82 @@ export default function Feed() {
         </div>
       </div>
 
+      {/* Matching Topics Result */}
+      {search && matchedTopics.length > 0 && (
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+          <h3 className="text-sm font-bold text-gray-400 uppercase mb-3">Matching Topics</h3>
+          <div className="flex flex-wrap gap-2">
+            {matchedTopics.map((topic) => (
+              <button
+                key={topic.name}
+                onClick={() => setSelectedTag(topic.name)}
+                className="px-3 py-1.5 rounded-full text-sm font-medium bg-indigo-900/30 text-indigo-300 border border-indigo-700/30 hover:bg-indigo-900/50 transition-colors"
+              >
+                #{topic.name} <span className="text-indigo-500 ml-1 text-xs">({topic.count})</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Filter Bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center bg-gray-900 p-1 rounded-xl border border-gray-800">
-          <button
-            onClick={() => setSortBy("hot")}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 ${sortBy === "hot" ? "bg-gray-800 text-white shadow-sm" : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"}`}
-          >
-            Hot
-          </button>
-          <button
-            onClick={() => setSortBy("newest")}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 ${sortBy === "newest" ? "bg-gray-800 text-white shadow-sm" : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"}`}
-          >
-            New
-          </button>
-          <button
-            onClick={() => setSortBy("top")}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 ${sortBy === "top" ? "bg-gray-800 text-white shadow-sm" : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"}`}
-          >
-            Top
-          </button>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center bg-gray-900 p-1 rounded-xl border border-gray-800">
+            <button
+              onClick={() => setSortBy("hot")}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 ${sortBy === "hot" ? "bg-gray-800 text-white shadow-sm" : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"}`}
+            >
+              Hot
+            </button>
+            <button
+              onClick={() => setSortBy("newest")}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 ${sortBy === "newest" ? "bg-gray-800 text-white shadow-sm" : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"}`}
+            >
+              New
+            </button>
+            <button
+              onClick={() => setSortBy("top")}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 ${sortBy === "top" ? "bg-gray-800 text-white shadow-sm" : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"}`}
+            >
+              Top
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto max-w-full pb-2 sm:pb-0 scrollbar-hide">
+            <button
+              onClick={() => setSelectedCategory("")}
+              className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 border ${selectedCategory === "" ? "bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/20" : "bg-gray-900 border-gray-800 text-gray-400 hover:border-gray-600 hover:text-gray-200"}`}
+            >
+              All
+            </button>
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 border ${selectedCategory === cat ? "bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/20" : "bg-gray-900 border-gray-800 text-gray-400 hover:border-gray-600 hover:text-gray-200"}`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto max-w-full pb-2 sm:pb-0 scrollbar-hide">
-          <button
-            onClick={() => setSelectedCategory("")}
-            className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 border ${selectedCategory === "" ? "bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/20" : "bg-gray-900 border-gray-800 text-gray-400 hover:border-gray-600 hover:text-gray-200"}`}
-          >
-            All
-          </button>
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 border ${selectedCategory === cat ? "bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/20" : "bg-gray-900 border-gray-800 text-gray-400 hover:border-gray-600 hover:text-gray-200"}`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+        {/* Trending Topics Filter */}
+        {trendingTopics.length > 0 && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            <span className="text-xs font-bold text-gray-500 uppercase whitespace-nowrap mr-2">Trending:</span>
+            {trendingTopics.map(topic => (
+              <button
+                key={topic.name}
+                onClick={() => setSelectedTag(selectedTag === topic.name ? "" : topic.name)}
+                className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200 border ${selectedTag === topic.name ? "bg-indigo-900/50 text-indigo-200 border-indigo-500" : "bg-gray-900 border-gray-800 text-gray-400 hover:border-gray-600 hover:text-gray-200"}`}
+              >
+                #{topic.name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Posts Feed */}
