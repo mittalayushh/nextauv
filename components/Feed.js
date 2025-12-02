@@ -6,17 +6,21 @@ import Link from "next/link";
 import PostSkeleton from "./PostSkeleton";
 import Pagination from "./Pagination";
 
+import { useRouter, useSearchParams } from "next/navigation";
+
 export default function Feed() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const searchParams = useSearchParams();
+  const search = searchParams.get("search") || "";
 
   const fetchPosts = async (page = 1) => {
     try {
       setLoading(true);
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001";
-      const apiUrl = `${baseUrl}/api/posts?page=${page}&limit=5`;
+      const apiUrl = `${baseUrl}/api/posts?page=${page}&limit=5&search=${encodeURIComponent(search)}`;
 
       console.log("Fetching posts from:", apiUrl);
       const token = localStorage.getItem("token");
@@ -46,6 +50,11 @@ export default function Feed() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    setCurrentPage(1); // Reset to page 1 when search changes
+    fetchPosts(1);
+  }, [search]);
 
   useEffect(() => {
     fetchPosts(currentPage);

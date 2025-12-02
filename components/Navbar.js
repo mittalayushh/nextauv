@@ -2,7 +2,19 @@
 import Link from "next/link";
 import { IconSearch, IconUser, IconMenu2, IconBell, IconMessage, IconPlus } from "@tabler/icons-react";
 
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
 export default function Navbar({ user, onSignOut }) {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = (e) => {
+    if (e.key === "Enter") {
+      router.push(`/?search=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
   return (
     <nav className="sticky top-0 z-50 bg-gray-900 border-b border-gray-700 h-16 px-4 flex items-center justify-between">
       {/* Logo & Mobile Menu */}
@@ -28,6 +40,9 @@ export default function Navbar({ user, onSignOut }) {
             type="text"
             className="block w-full pl-10 pr-3 py-2 border border-gray-700 rounded-full leading-5 bg-gray-800 text-gray-300 placeholder-gray-500 focus:outline-none focus:bg-gray-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm transition duration-150 ease-in-out"
             placeholder="Search AUV Forum"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleSearch}
           />
         </div>
       </div>
