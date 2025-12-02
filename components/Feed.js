@@ -207,10 +207,10 @@ export default function Feed() {
         </div>
 
         {/* Trending Topics Filter */}
-        {trendingTopics.length > 0 && (
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            <span className="text-xs font-bold text-gray-500 uppercase whitespace-nowrap mr-2">Trending:</span>
-            {trendingTopics.map(topic => (
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide min-h-[32px]">
+          <span className="text-xs font-bold text-gray-500 uppercase whitespace-nowrap mr-2">Trending:</span>
+          {trendingTopics.length > 0 ? (
+            trendingTopics.map(topic => (
               <button
                 key={topic.name}
                 onClick={() => setSelectedTag(selectedTag === topic.name ? "" : topic.name)}
@@ -218,9 +218,11 @@ export default function Feed() {
               >
                 #{topic.name}
               </button>
-            ))}
-          </div>
-        )}
+            ))
+          ) : (
+            <span className="text-xs text-gray-600 italic">No topics yet</span>
+          )}
+        </div>
       </div>
 
       {/* Posts Feed */}
