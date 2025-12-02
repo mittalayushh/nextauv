@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function LoginPage() {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001";
   const [form, setForm] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
   const router = useRouter();
@@ -21,22 +21,9 @@ export default function LoginPage() {
       const data = await res.json();
       if (res.ok) {
         localStorage.setItem("token", data.token);
-        localStorage.setItem("email", form.email);
-        // Get username from decoded token
-        try {
-          const base64Url = data.token.split(".")[1];
-          const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-          const jsonPayload = decodeURIComponent(
-            atob(base64)
-              .split("")
-              .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-              .join("")
-          );
-          const decoded = JSON.parse(jsonPayload);
-          localStorage.setItem("username", decoded.username);
-        } catch (err) {
-          console.error("Failed to decode token:", err);
-        }
+        localStorage.setItem("email", data.user.email);
+        localStorage.setItem("username", data.user.username);
+
         setMessage("Login successful");
         router.replace("/");
       } else {

@@ -68,7 +68,7 @@ export default function Navbar({ user, onSignOut }) {
                   <p className="text-xs text-gray-400">Online Status: On</p>
                 </div>
 
-                <Link href="/profile" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">
+                <Link href={`/profile/${user.username}`} className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">
                   Profile
                 </Link>
 

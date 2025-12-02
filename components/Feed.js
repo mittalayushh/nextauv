@@ -12,13 +12,22 @@ export default function Feed() {
   useEffect(() => {
     const getPosts = async () => {
       try {
-        // Ensure we hit the /api/posts endpoint, not just the base URL
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001";
         const apiUrl = `${baseUrl}/api/posts`;
-        console.log("Fetching posts from", apiUrl);
+        console.log("Constructed API URL:", apiUrl);
 
-        const res = await fetch(apiUrl);
+        console.log("Starting fetch...");
+        const token = localStorage.getItem("token");
+        const headers = {
+          "Content-Type": "application/json",
+        };
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+
+        const res = await fetch(apiUrl, { headers });
         console.log("Fetch response status:", res.status);
+        console.log("Fetch response headers:", [...res.headers.entries()]);
 
         if (res.ok) {
           const data = await res.json();
