@@ -13,6 +13,7 @@ export default function Feed() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [sortBy, setSortBy] = useState("newest"); // New state for sorting
   const searchParams = useSearchParams();
   const search = searchParams.get("search") || "";
 
@@ -20,7 +21,7 @@ export default function Feed() {
     try {
       setLoading(true);
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001";
-      const apiUrl = `${baseUrl}/api/posts?page=${page}&limit=5&search=${encodeURIComponent(search)}`;
+      const apiUrl = `${baseUrl}/api/posts?page=${page}&limit=5&search=${encodeURIComponent(search)}&sort=${sortBy}`;
 
       console.log("Fetching posts from:", apiUrl);
       const token = localStorage.getItem("token");
@@ -52,9 +53,9 @@ export default function Feed() {
   };
 
   useEffect(() => {
-    setCurrentPage(1); // Reset to page 1 when search changes
+    setCurrentPage(1);
     fetchPosts(1);
-  }, [search]);
+  }, [search, sortBy]); // Fetch when search or sort changes
 
   useEffect(() => {
     fetchPosts(currentPage);
@@ -97,10 +98,24 @@ export default function Feed() {
 
       {/* Filter Bar */}
       <div className="bg-gray-800 border border-gray-700 rounded-lg p-3 mb-4 flex items-center gap-4 text-sm font-bold text-gray-400 overflow-x-auto">
-        <button className="text-indigo-400 bg-gray-700/50 px-3 py-1 rounded-full whitespace-nowrap">Best</button>
-        <button className="hover:bg-gray-700 px-3 py-1 rounded-full transition whitespace-nowrap">Hot</button>
-        <button className="hover:bg-gray-700 px-3 py-1 rounded-full transition whitespace-nowrap">New</button>
-        <button className="hover:bg-gray-700 px-3 py-1 rounded-full transition whitespace-nowrap">Top</button>
+        <button
+          onClick={() => setSortBy("newest")}
+          className={`px-3 py-1 rounded-full whitespace-nowrap transition ${sortBy === "newest" ? "text-indigo-400 bg-gray-700/50" : "hover:bg-gray-700"}`}
+        >
+          New
+        </button>
+        <button
+          onClick={() => setSortBy("top")}
+          className={`px-3 py-1 rounded-full whitespace-nowrap transition ${sortBy === "top" ? "text-indigo-400 bg-gray-700/50" : "hover:bg-gray-700"}`}
+        >
+          Top
+        </button>
+        <button
+          onClick={() => setSortBy("oldest")}
+          className={`px-3 py-1 rounded-full whitespace-nowrap transition ${sortBy === "oldest" ? "text-indigo-400 bg-gray-700/50" : "hover:bg-gray-700"}`}
+        >
+          Oldest
+        </button>
       </div>
 
       {/* Posts Feed */}
