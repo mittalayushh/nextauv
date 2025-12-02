@@ -1,27 +1,22 @@
 "use client";
 import { useState, useEffect } from "react";
 import { IconPhoto, IconLink } from "@tabler/icons-react";
-import PostSkeleton from "./PostSkeleton";
 import PostCard from "./PostCard";
 import Link from "next/link";
+import PostSkeleton from "./PostSkeleton";
+import Pagination from "./Pagination";
 
 export default function Feed() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [cursor, setCursor] = useState(null);
-  const [hasMore, setHasMore] = useState(true);
-  const [fetchingMore, setFetchingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const fetchPosts = async (currentCursor = null, isInitial = false) => {
+  const fetchPosts = async (page = 1) => {
     try {
-      if (isInitial) setLoading(true);
-      else setFetchingMore(true);
-
+      setLoading(true);
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001";
-      let apiUrl = `${baseUrl}/api/posts?limit=10`;
-      if (currentCursor) {
-        apiUrl += `&cursor=${currentCursor}`;
-      }
+      const apiUrl = `${baseUrl}/api/posts?page=${page}&limit=5`;
 
       console.log("Fetching posts from:", apiUrl);
       const token = localStorage.getItem("token");
@@ -36,18 +31,12 @@ export default function Feed() {
 
       if (res.ok) {
         const data = await res.json();
-        // Handle both old array format (fallback) and new object format
         const newPosts = Array.isArray(data) ? data : data.posts;
-        const nextCursor = Array.isArray(data) ? null : data.nextCursor;
+        const pagination = data.pagination || {};
 
-        if (isInitial) {
-          setPosts(newPosts);
-        } else {
-          setPosts(prev => [...prev, ...newPosts]);
-        }
-
-        setCursor(nextCursor);
-        setHasMore(!!nextCursor);
+        setPosts(newPosts);
+        setTotalPages(pagination.pages || 1);
+        setCurrentPage(pagination.page || page);
       } else {
         console.error("Fetch failed with status:", res.status);
       }
@@ -55,18 +44,16 @@ export default function Feed() {
       console.error("Failed to fetch posts:", error);
     } finally {
       setLoading(false);
-      setFetchingMore(false);
     }
   };
 
   useEffect(() => {
-    fetchPosts(null, true);
-  }, []);
+    fetchPosts(currentPage);
+  }, [currentPage]);
 
-  const loadMore = () => {
-    if (!fetchingMore && hasMore) {
-      fetchPosts(cursor);
-    }
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -118,17 +105,12 @@ export default function Feed() {
         ) : posts.length > 0 ? (
           <>
             {posts.map((post) => <PostCard key={post.id} post={post} />)}
-            {hasMore && (
-              <div className="flex justify-center pt-4 pb-8">
-                <button
-                  onClick={loadMore}
-                  disabled={fetchingMore}
-                  className="px-6 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-full text-sm font-medium transition disabled:opacity-50"
-                >
-                  {fetchingMore ? "Loading..." : "Load More"}
-                </button>
-              </div>
-            )}
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
           </>
         ) : (
           <div className="text-center py-10 text-gray-500">
