@@ -9,7 +9,7 @@ Features:
 * Easily search structured knowledge
 ---
 
-## **2. System Architecture**
+## **1. System Architecture**
 
 ### **Architecture Flow**
 
@@ -21,7 +21,7 @@ Backend API (Next.js API Routes / Node.js Express)
 PostgreSQL Database (NeonDB via Prisma)
 ```
 
-## **3. Tech Stack Overview**
+## **2. Tech Stack Overview**
 
 | Layer              | Technologies                              |
 | ------------------ | ----------------------------------------- |
@@ -34,7 +34,7 @@ PostgreSQL Database (NeonDB via Prisma)
 
 ---
 
-## **5. API Overview**
+## **3. API Overview**
 
 ### **Authentication**
 
@@ -59,7 +59,7 @@ PostgreSQL Database (NeonDB via Prisma)
 | --------------- | ------ | ----------------------- | ------------- |
 | `/api/comments` | POST   | Add a comment to a post | Authenticated |
 
-## **7. Getting Started**
+## **4. Getting Started**
 
 ### **Prerequisites**
 
@@ -96,7 +96,7 @@ Backend:
 go to for backend installations: https://github.com/mittalayushh/nextauvserver
 ---
 
-## **8. Deployment**
+## **5. Deployment**
 
 ### Frontend
 
@@ -113,13 +113,13 @@ go to for backend installations: https://github.com/mittalayushh/nextauvserver
 
 ---
 
-## **9. License**
+## **6. License**
 
 MIT License
 
 ---
 
-## **10. Contributing**
+## **7. Contributing**
 
 Pull requests are welcome.
 For major changes, open an issue first to discuss what you would like to modify.
