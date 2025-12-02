@@ -1,11 +1,22 @@
-"use client";
-import { useState } from "react";
-import { IconMessageCircle, IconArrowUp, IconArrowDown } from "@tabler/icons-react";
+
+import { useState, useEffect } from "react";
+import { IconMessageCircle, IconArrowUp, IconArrowDown, IconEdit, IconTrash, IconCheck, IconX } from "@tabler/icons-react";
+import { toast } from "sonner";
 
 export default function CommentSection({ comments, postId, onCommentAdded }) {
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyContent, setReplyContent] = useState("");
+  const [currentUser, setCurrentUser] = useState(null);
+  const [editingComment, setEditingComment] = useState(null);
+  const [editContent, setEditContent] = useState("");
+
+  useEffect(() => {
+    const username = localStorage.getItem("username");
+    if (username) {
+      setCurrentUser(username);
+    }
+  }, []);
 
   const handleSubmit = async (e, parentId = null) => {
     e.preventDefault();
@@ -15,11 +26,11 @@ export default function CommentSection({ comments, postId, onCommentAdded }) {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        alert("Please login to comment");
+        toast.error("Please login to comment");
         return;
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001"}/api/posts/${postId}/comments`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001"} /api/posts / ${postId}/comments`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -37,9 +48,63 @@ export default function CommentSection({ comments, postId, onCommentAdded }) {
         } else {
           setNewComment("");
         }
+        toast.success("Comment posted");
+      } else {
+        toast.error("Failed to post comment");
       }
     } catch (error) {
       console.error("Failed to post comment:", error);
+      toast.error("Failed to post comment");
+    }
+  };
+
+  const handleDelete = async (commentId) => {
+    if (!confirm("Are you sure you want to delete this comment?")) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001"}/api/comments/${commentId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res.ok) {
+        toast.success("Comment deleted");
+        // Ideally reload or update state. For now, reload page or rely on parent refetch
+        window.location.reload();
+      } else {
+        toast.error("Failed to delete comment");
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+      toast.error("Failed to delete comment");
+    }
+  };
+
+  const handleUpdate = async (commentId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001"}/api/comments/${commentId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ content: editContent }),
+      });
+
+      if (res.ok) {
+        setEditingComment(null);
+        toast.success("Comment updated");
+        window.location.reload(); // Simple refresh for now
+      } else {
+        toast.error("Failed to update comment");
+      }
+    } catch (err) {
+      console.error("Update error:", err);
+      toast.error("Failed to update comment");
     }
   };
 
@@ -47,29 +112,21 @@ export default function CommentSection({ comments, postId, onCommentAdded }) {
   const renderComments = (commentsList, depth = 0) => {
     if (!commentsList) return null;
 
-    // Filter for top-level comments if depth is 0, otherwise expect pre-filtered/nested list
-    // Since backend returns flat list, we might need to build tree here or backend.
-    // Let's assume backend returns flat list and we build tree or backend returns nested.
-    // My controller returns flat list with `replies` included? 
-    // Wait, my controller `getComments` does `include: { replies: ... }`. 
-    // This only goes one level deep by default in Prisma unless we use recursion or raw query.
-    // For simplicity, let's assume single-level nesting for now or just render flat list with indentation if we had parentId.
-    // Actually, the Reddit style is deeply nested.
-    // Let's stick to the controller implementation: it returns all comments for the post.
-    // We can build the tree here.
-
     // Helper to build tree from flat list
     const buildTree = (list) => {
       const map = {};
       const roots = [];
-      list.forEach((c, i) => {
+      // Deep copy to avoid mutating props
+      const nodes = list.map(c => ({ ...c, children: [] }));
+
+      nodes.forEach((c, i) => {
         map[c.id] = i;
-        list[i].children = [];
       });
-      list.forEach((c) => {
+
+      nodes.forEach((c) => {
         if (c.parentId) {
           if (map[c.parentId] !== undefined) {
-            list[map[c.parentId]].children.push(c);
+            nodes[map[c.parentId]].children.push(c);
           }
         } else {
           roots.push(c);
@@ -78,7 +135,7 @@ export default function CommentSection({ comments, postId, onCommentAdded }) {
       return roots;
     };
 
-    const rootComments = depth === 0 ? buildTree(JSON.parse(JSON.stringify(commentsList))) : commentsList;
+    const rootComments = depth === 0 ? buildTree(commentsList) : commentsList;
 
     return rootComments.map((comment) => (
       <div key={comment.id} className={`mt-4 ${depth > 0 ? "ml-4 pl-4 border-l border-gray-700" : ""}`}>
@@ -87,12 +144,41 @@ export default function CommentSection({ comments, postId, onCommentAdded }) {
             {comment.author?.username?.[0]?.toUpperCase() || "U"}
           </div>
           <div className="flex-1">
-            <div className="text-xs text-gray-400 mb-1">
-              <span className="font-bold text-gray-300">{comment.author?.username}</span>
-              <span className="mx-1">•</span>
-              <span>{new Date(comment.createdAt).toLocaleDateString()}</span>
+            <div className="flex items-center justify-between mb-1">
+              <div className="text-xs text-gray-400">
+                <span className="font-bold text-gray-300">{comment.author?.username}</span>
+                <span className="mx-1">•</span>
+                <span>{new Date(comment.createdAt).toLocaleDateString()}</span>
+              </div>
+
+              {currentUser && comment.author?.username === currentUser && editingComment !== comment.id && (
+                <div className="flex gap-2">
+                  <button onClick={() => { setEditingComment(comment.id); setEditContent(comment.content); }} className="text-gray-500 hover:text-gray-300">
+                    <IconEdit size={14} />
+                  </button>
+                  <button onClick={() => handleDelete(comment.id)} className="text-gray-500 hover:text-red-500">
+                    <IconTrash size={14} />
+                  </button>
+                </div>
+              )}
             </div>
-            <div className="text-sm text-gray-200 mb-2">{comment.content}</div>
+
+            {editingComment === comment.id ? (
+              <div className="mb-2">
+                <textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 rounded p-2 text-sm text-gray-200 focus:outline-none"
+                  rows={2}
+                />
+                <div className="flex gap-2 mt-1">
+                  <button onClick={() => handleUpdate(comment.id)} className="text-xs bg-indigo-600 px-2 py-1 rounded text-white">Save</button>
+                  <button onClick={() => setEditingComment(null)} className="text-xs bg-gray-700 px-2 py-1 rounded text-gray-300">Cancel</button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-sm text-gray-200 mb-2">{comment.content}</div>
+            )}
 
             <div className="flex items-center gap-4 text-xs text-gray-400 font-bold">
               <button className="flex items-center gap-1 hover:bg-gray-800 p-1 rounded">
@@ -151,7 +237,7 @@ export default function CommentSection({ comments, postId, onCommentAdded }) {
   return (
     <div className="bg-gray-900 rounded-lg p-4">
       <div className="mb-6">
-        <p className="text-sm text-gray-400 mb-2">Comment as <span className="text-indigo-400">Current User</span></p>
+        <p className="text-sm text-gray-400 mb-2">Comment as <span className="text-indigo-400">{currentUser || "Guest"}</span></p>
         <form onSubmit={(e) => handleSubmit(e)}>
           <textarea
             value={newComment}

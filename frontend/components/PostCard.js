@@ -1,17 +1,28 @@
-import { IconArrowUp, IconArrowDown, IconMessageCircle, IconShare, IconBookmark } from "@tabler/icons-react";
+import { IconArrowUp, IconArrowDown, IconMessageCircle, IconShare, IconBookmark, IconEdit, IconTrash, IconX, IconCheck } from "@tabler/icons-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import clsx from "clsx";
+import { toast } from "sonner";
 
-export default function PostCard({ post }) {
+export default function PostCard({ post, onDelete }) {
   const [voteCount, setVoteCount] = useState(post.voteCount || 0);
   const [userVote, setUserVote] = useState(post.userVote || 0);
   const [isSaved, setIsSaved] = useState(post.isSaved || false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(post.title);
+  const [editContent, setEditContent] = useState(post.content || "");
+  const [isDeleted, setIsDeleted] = useState(false);
 
   useEffect(() => {
     setVoteCount(post.voteCount || 0);
     setUserVote(post.userVote || 0);
     setIsSaved(post.isSaved || false);
+
+    const username = localStorage.getItem("username");
+    if (username) {
+      setCurrentUser(username);
+    }
   }, [post]);
 
   const handleVote = async (e, value) => {
@@ -37,13 +48,13 @@ export default function PostCard({ post }) {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        alert("Please login to vote");
+        toast.error("Please login to vote");
         setUserVote(previousVote);
         setVoteCount(previousCount);
         return;
       }
 
-      const res = await fetch(`http://localhost:4001/api/posts/${post.id}/vote`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001"}/api/posts/${post.id}/vote`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -55,6 +66,7 @@ export default function PostCard({ post }) {
       if (!res.ok) throw new Error("Failed to vote");
     } catch (err) {
       console.error("Vote error:", err);
+      toast.error("Failed to vote");
       setUserVote(previousVote);
       setVoteCount(previousCount);
     }
@@ -70,12 +82,12 @@ export default function PostCard({ post }) {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        alert("Please login to save");
+        toast.error("Please login to save");
         setIsSaved(previousSaved);
         return;
       }
 
-      const res = await fetch(`http://localhost:4001/api/posts/${post.id}/save`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001"}/api/posts/${post.id}/save`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -84,11 +96,75 @@ export default function PostCard({ post }) {
       });
 
       if (!res.ok) throw new Error("Failed to save");
+      toast.success(isSaved ? "Post unsaved" : "Post saved");
     } catch (err) {
       console.error("Save error:", err);
+      toast.error("Failed to save post");
       setIsSaved(previousSaved);
     }
   };
+
+  const handleDelete = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Use a custom toast for confirmation or just standard confirm for now (user asked for graceful handling of ERRORS, confirm is UX)
+    // But let's stick to confirm for safety, it's standard.
+    if (!confirm("Are you sure you want to delete this post?")) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001"}/api/posts/${post.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res.ok) {
+        setIsDeleted(true);
+        toast.success("Post deleted successfully");
+        if (onDelete) onDelete(post.id);
+      } else {
+        toast.error("Failed to delete post");
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+      toast.error("Failed to delete post");
+    }
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001"}/api/posts/${post.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title: editTitle, content: editContent, tags: post.tags }),
+      });
+
+      if (res.ok) {
+        setIsEditing(false);
+        // Ideally update parent state, but local update works for now
+        post.title = editTitle;
+        post.content = editContent;
+        toast.success("Post updated successfully");
+      } else {
+        toast.error("Failed to update post");
+      }
+    } catch (err) {
+      console.error("Update error:", err);
+      toast.error("Failed to update post");
+    }
+  };
+
+  if (isDeleted) return null;
 
   return (
     <div className="bg-gray-800 border border-gray-700 rounded-lg hover:border-gray-600 transition cursor-pointer flex overflow-hidden">
@@ -123,28 +199,72 @@ export default function PostCard({ post }) {
       {/* Content Column */}
       <div className="flex-1 p-2 sm:p-3">
         {/* Meta */}
-        <div className="flex items-center gap-2 text-xs text-gray-400 mb-2">
-          <div className="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-[10px]">
-            r/
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2 text-xs text-gray-400">
+            <div className="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-[10px]">
+              r/
+            </div>
+            <span className="font-bold text-gray-300 hover:underline">r/General</span>
+            <span>•</span>
+            <Link href={`/profile/${post.author?.username}`} className="hover:underline">
+              Posted by u/{post.author?.username || "deleted"}
+            </Link>
+            <span>•</span>
+            <span>{new Date(post.createdAt).toLocaleDateString()}</span>
           </div>
-          <span className="font-bold text-gray-300 hover:underline">r/General</span>
-          <span>•</span>
-          <Link href={`/profile/${post.author?.username}`} className="hover:underline">
-            Posted by u/{post.author?.username || "deleted"}
-          </Link>
-          <span>•</span>
-          <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+
+          {/* Edit/Delete Actions */}
+          {currentUser && post.author?.username === currentUser && !isEditing && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsEditing(true); }}
+                className="text-gray-400 hover:text-gray-200 p-1 rounded hover:bg-gray-700"
+              >
+                <IconEdit size={16} />
+              </button>
+              <button
+                onClick={handleDelete}
+                className="text-gray-400 hover:text-red-500 p-1 rounded hover:bg-gray-700"
+              >
+                <IconTrash size={16} />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Title & Body */}
-        <Link href={`/post/${post.id}`}>
-          <h3 className="text-lg font-medium text-gray-100 mb-2 leading-snug">{post.title}</h3>
-          {post.content && (
-            <div className="text-sm text-gray-300 mb-3 line-clamp-3 font-serif">
-              {post.content}
+        {isEditing ? (
+          <div className="mb-3" onClick={(e) => e.stopPropagation()}>
+            <input
+              type="text"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-gray-100 mb-2 focus:outline-none focus:border-indigo-500"
+            />
+            <textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-gray-100 h-32 focus:outline-none focus:border-indigo-500"
+            />
+            <div className="flex gap-2 mt-2">
+              <button onClick={handleUpdate} className="flex items-center gap-1 px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm">
+                <IconCheck size={16} /> Save
+              </button>
+              <button onClick={() => setIsEditing(false)} className="flex items-center gap-1 px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 text-sm">
+                <IconX size={16} /> Cancel
+              </button>
             </div>
-          )}
-        </Link>
+          </div>
+        ) : (
+          <Link href={`/post/${post.id}`}>
+            <h3 className="text-lg font-medium text-gray-100 mb-2 leading-snug">{post.title}</h3>
+            {post.content && (
+              <div className="text-sm text-gray-300 mb-3 line-clamp-3 font-serif">
+                {post.content}
+              </div>
+            )}
+          </Link>
+        )}
 
         {/* Tags */}
         {post.tags && post.tags.length > 0 && (
