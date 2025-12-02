@@ -48,6 +48,7 @@ export default function CreatePostForm() {
       }
 
       const envApiUrl = process.env.NEXT_PUBLIC_API_URL;
+      console.log("DEBUG: I AM THE NEW CODE - TIMESTAMP: " + new Date().toISOString());
       console.log("DEBUG: process.env.NEXT_PUBLIC_API_URL =", envApiUrl);
       console.log("DEBUG: Type of env var =", typeof envApiUrl);
 
