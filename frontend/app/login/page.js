@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function LoginPage() {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001";
   const [form, setForm] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
   const router = useRouter();
