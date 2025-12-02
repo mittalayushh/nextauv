@@ -70,7 +70,7 @@ PostgreSQL Database (NeonDB via Prisma)
 ### **Installation**
 
 ```bash
-git clone https://github.com/<your-username>/nextAUV.git
+git clone https://github.com/mittalayushh/nextauv.git
 cd nextAUV
 ```
 
