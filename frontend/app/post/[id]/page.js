@@ -26,7 +26,7 @@ export default function PostPage() {
 
     const fetchData = async () => {
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001";
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001/api";
 
         const headers = {
           "Content-Type": "application/json",

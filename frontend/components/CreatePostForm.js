@@ -47,7 +47,7 @@ export default function CreatePostForm() {
         return;
       }
 
-      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001"}/posts`;
+      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001/api"}/posts`;
       console.log("Sending request to:", apiUrl);
 
       const res = await fetch(apiUrl, {

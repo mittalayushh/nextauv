@@ -12,12 +12,8 @@ export default function Feed() {
   useEffect(() => {
     const getPosts = async () => {
       try {
-        // Ensure we hit the /api/posts endpoint, not just the base URL
-        const envApiUrl = process.env.NEXT_PUBLIC_API_URL;
-        console.log("NEXT_PUBLIC_API_URL:", envApiUrl);
-
-        const baseUrl = envApiUrl || "http://localhost:4001";
-        const apiUrl = `${baseUrl}/api/posts`;
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001/api";
+        const apiUrl = `${baseUrl}/posts`;
         console.log("Constructed API URL:", apiUrl);
 
         console.log("Starting fetch...");

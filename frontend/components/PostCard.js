@@ -60,7 +60,7 @@ export default function PostCard({ post, onDelete }) {
         return;
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001"}/posts/${post.id}/vote`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001/api"}/posts/${post.id}/vote`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
