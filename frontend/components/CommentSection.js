@@ -159,7 +159,7 @@ export default function CommentSection({ comments, postId, onCommentAdded }) {
                 <span>{new Date(comment.createdAt).toLocaleDateString()}</span>
               </div>
 
-              {currentUser && comment.author?.username === currentUser && editingComment !== comment.id && (
+              {currentUser && comment.author?.username?.toLowerCase() === currentUser?.toLowerCase() && editingComment !== comment.id && (
                 <div className="flex gap-2">
                   <button onClick={() => { setEditingComment(comment.id); setEditContent(comment.content); }} className="text-gray-500 hover:text-gray-300">
                     <IconEdit size={14} />

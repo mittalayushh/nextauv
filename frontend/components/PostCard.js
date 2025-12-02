@@ -23,6 +23,12 @@ export default function PostCard({ post, onDelete }) {
     if (username) {
       setCurrentUser(username);
     }
+    console.log("PostCard Debug:", {
+      postId: post.id,
+      postAuthor: post.author?.username,
+      currentUser: username,
+      match: post.author?.username === username
+    });
   }, [post]);
 
   const handleVote = async (e, value) => {
@@ -220,7 +226,7 @@ export default function PostCard({ post, onDelete }) {
           </div>
 
           {/* Edit/Delete Actions */}
-          {currentUser && post.author?.username === currentUser && !isEditing && (
+          {currentUser && post.author?.username?.toLowerCase() === currentUser?.toLowerCase() && !isEditing && (
             <div className="flex items-center gap-2">
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsEditing(true); }}
