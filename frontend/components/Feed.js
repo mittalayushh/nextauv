@@ -21,7 +21,15 @@ export default function Feed() {
         console.log("Constructed API URL:", apiUrl);
 
         console.log("Starting fetch...");
-        const res = await fetch(apiUrl);
+        const token = localStorage.getItem("token");
+        const headers = {
+          "Content-Type": "application/json",
+        };
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+
+        const res = await fetch(apiUrl, { headers });
         console.log("Fetch response status:", res.status);
         console.log("Fetch response headers:", [...res.headers.entries()]);
 
