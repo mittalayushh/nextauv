@@ -13,6 +13,9 @@ export default function PostPage() {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [cursor, setCursor] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [fetchingMore, setFetchingMore] = useState(false);
 
   useEffect(() => {
     // Session Hydration
@@ -24,41 +27,72 @@ export default function PostPage() {
       setUser({ email, username, token });
     }
 
-    const fetchData = async () => {
+    const fetchPost = async () => {
       try {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001";
+        const headers = { "Content-Type": "application/json" };
+        if (token) headers["Authorization"] = `Bearer ${token}`;
 
-        const headers = {
-          "Content-Type": "application/json",
-        };
-        if (token) {
-          headers["Authorization"] = `Bearer ${token}`;
-        }
-
-        // Fetch Post
         const postRes = await fetch(`${baseUrl}/api/posts/${id}`, { headers });
         if (postRes.ok) {
           const postData = await postRes.json();
           setPost(postData);
         }
-
-        // Fetch Comments
-        const commentsRes = await fetch(`${baseUrl}/api/posts/${id}/comments`, { headers });
-        if (commentsRes.ok) {
-          const commentsData = await commentsRes.json();
-          setComments(commentsData);
-        }
       } catch (error) {
-        console.error("Failed to fetch post data:", error);
-      } finally {
-        setLoading(false);
+        console.error("Failed to fetch post:", error);
       }
     };
 
     if (id) {
-      fetchData();
+      fetchPost();
+      fetchComments(null, true);
     }
   }, [id]);
+
+  const fetchComments = async (currentCursor = null, isInitial = false) => {
+    try {
+      if (isInitial) setLoading(true);
+      else setFetchingMore(true);
+
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001";
+      const token = localStorage.getItem("token");
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      let apiUrl = `${baseUrl}/api/posts/${id}/comments?limit=10`;
+      if (currentCursor) {
+        apiUrl += `&cursor=${currentCursor}`;
+      }
+
+      const commentsRes = await fetch(apiUrl, { headers });
+      if (commentsRes.ok) {
+        const data = await commentsRes.json();
+        const newComments = Array.isArray(data) ? data : data.comments;
+        const nextCursor = Array.isArray(data) ? null : data.nextCursor;
+
+        if (isInitial) {
+          setComments(newComments);
+          setLoading(false); // Only set loading false after initial comments fetch
+        } else {
+          setComments(prev => [...prev, ...newComments]);
+        }
+
+        setCursor(nextCursor);
+        setHasMore(!!nextCursor);
+      }
+    } catch (error) {
+      console.error("Failed to fetch comments:", error);
+      if (isInitial) setLoading(false);
+    } finally {
+      setFetchingMore(false);
+    }
+  };
+
+  const loadMoreComments = () => {
+    if (!fetchingMore && hasMore) {
+      fetchComments(cursor);
+    }
+  };
 
   const handleSignOut = () => {
     localStorage.removeItem("token");
@@ -102,6 +136,17 @@ export default function PostPage() {
             postId={id}
             onCommentAdded={handleCommentAdded}
           />
+          {hasMore && (
+            <div className="flex justify-center mt-4">
+              <button
+                onClick={loadMoreComments}
+                disabled={fetchingMore}
+                className="px-4 py-1 bg-gray-800 hover:bg-gray-700 text-gray-400 rounded-full text-xs font-medium transition disabled:opacity-50"
+              >
+                {fetchingMore ? "Loading..." : "Load More Comments"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

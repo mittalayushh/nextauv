@@ -8,45 +8,66 @@ import Link from "next/link";
 export default function Feed() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [cursor, setCursor] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [fetchingMore, setFetchingMore] = useState(false);
+
+  const fetchPosts = async (currentCursor = null, isInitial = false) => {
+    try {
+      if (isInitial) setLoading(true);
+      else setFetchingMore(true);
+
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001";
+      let apiUrl = `${baseUrl}/api/posts?limit=10`;
+      if (currentCursor) {
+        apiUrl += `&cursor=${currentCursor}`;
+      }
+
+      console.log("Fetching posts from:", apiUrl);
+      const token = localStorage.getItem("token");
+      const headers = {
+        "Content-Type": "application/json",
+      };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const res = await fetch(apiUrl, { headers });
+
+      if (res.ok) {
+        const data = await res.json();
+        // Handle both old array format (fallback) and new object format
+        const newPosts = Array.isArray(data) ? data : data.posts;
+        const nextCursor = Array.isArray(data) ? null : data.nextCursor;
+
+        if (isInitial) {
+          setPosts(newPosts);
+        } else {
+          setPosts(prev => [...prev, ...newPosts]);
+        }
+
+        setCursor(nextCursor);
+        setHasMore(!!nextCursor);
+      } else {
+        console.error("Fetch failed with status:", res.status);
+      }
+    } catch (error) {
+      console.error("Failed to fetch posts:", error);
+    } finally {
+      setLoading(false);
+      setFetchingMore(false);
+    }
+  };
 
   useEffect(() => {
-    const getPosts = async () => {
-      try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001";
-        const apiUrl = `${baseUrl}/api/posts`;
-        console.log("Constructed API URL:", apiUrl);
-
-        console.log("Starting fetch...");
-        const token = localStorage.getItem("token");
-        const headers = {
-          "Content-Type": "application/json",
-        };
-        if (token) {
-          headers["Authorization"] = `Bearer ${token}`;
-        }
-
-        const res = await fetch(apiUrl, { headers });
-        console.log("Fetch response status:", res.status);
-        console.log("Fetch response headers:", [...res.headers.entries()]);
-
-        if (res.ok) {
-          const data = await res.json();
-          console.log("Fetched posts data:", data);
-          setPosts(data);
-        } else {
-          console.error("Fetch failed with status:", res.status);
-          const text = await res.text();
-          console.error("Error response:", text);
-        }
-      } catch (error) {
-        console.error("Failed to fetch posts:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getPosts();
+    fetchPosts(null, true);
   }, []);
+
+  const loadMore = () => {
+    if (!fetchingMore && hasMore) {
+      fetchPosts(cursor);
+    }
+  };
 
   return (
     <div className="max-w-3xl mx-auto py-4 px-2 sm:px-4">
@@ -95,7 +116,20 @@ export default function Feed() {
             <PostSkeleton />
           </>
         ) : posts.length > 0 ? (
-          posts.map((post) => <PostCard key={post.id} post={post} />)
+          <>
+            {posts.map((post) => <PostCard key={post.id} post={post} />)}
+            {hasMore && (
+              <div className="flex justify-center pt-4 pb-8">
+                <button
+                  onClick={loadMore}
+                  disabled={fetchingMore}
+                  className="px-6 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-full text-sm font-medium transition disabled:opacity-50"
+                >
+                  {fetchingMore ? "Loading..." : "Load More"}
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-10 text-gray-500">
             <p>No posts yet. Be the first to create one!</p>
