@@ -43,16 +43,20 @@ export default function PostPage() {
       }
     };
 
+    const loadData = async () => {
+      setLoading(true);
+      await Promise.all([fetchPost(), fetchComments(null, true)]);
+      setLoading(false);
+    };
+
     if (id) {
-      fetchPost();
-      fetchComments(null, true);
+      loadData();
     }
   }, [id]);
 
   const fetchComments = async (currentCursor = null, isInitial = false) => {
     try {
-      if (isInitial) setLoading(true);
-      else setFetchingMore(true);
+      if (!isInitial) setFetchingMore(true);
 
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001";
       const token = localStorage.getItem("token");
@@ -72,7 +76,6 @@ export default function PostPage() {
 
         if (isInitial) {
           setComments(newComments);
-          setLoading(false); // Only set loading false after initial comments fetch
         } else {
           setComments(prev => [...prev, ...newComments]);
         }
@@ -82,9 +85,8 @@ export default function PostPage() {
       }
     } catch (error) {
       console.error("Failed to fetch comments:", error);
-      if (isInitial) setLoading(false);
     } finally {
-      setFetchingMore(false);
+      if (!isInitial) setFetchingMore(false);
     }
   };
 
