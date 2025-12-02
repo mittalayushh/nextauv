@@ -26,7 +26,7 @@ export default function PostPage() {
 
     const fetchData = async () => {
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001/api";
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001";
 
         const headers = {
           "Content-Type": "application/json",
@@ -36,14 +36,14 @@ export default function PostPage() {
         }
 
         // Fetch Post
-        const postRes = await fetch(`${baseUrl}/posts/${id}`, { headers });
+        const postRes = await fetch(`${baseUrl}/api/posts/${id}`, { headers });
         if (postRes.ok) {
           const postData = await postRes.json();
           setPost(postData);
         }
 
         // Fetch Comments
-        const commentsRes = await fetch(`${baseUrl}/posts/${id}/comments`, { headers });
+        const commentsRes = await fetch(`${baseUrl}/api/posts/${id}/comments`, { headers });
         if (commentsRes.ok) {
           const commentsData = await commentsRes.json();
           setComments(commentsData);

@@ -41,7 +41,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!username) return;
 
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001/api";
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4001";
     const token = localStorage.getItem("token");
     const headers = { "Content-Type": "application/json" };
     if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -50,7 +50,7 @@ export default function ProfilePage() {
     const fetchProfile = async () => {
       setLoadingProfile(true);
       try {
-        const res = await fetch(`${baseUrl}/users/${username}`, { headers });
+        const res = await fetch(`${baseUrl}/api/users/${username}`, { headers });
         if (res.ok) {
           const data = await res.json();
           setUserData(data);
@@ -73,22 +73,22 @@ export default function ProfilePage() {
         switch (activeTab) {
           case "overview":
           case "posts":
-            endpoint = `${baseUrl}/users/${username}/posts`;
+            endpoint = `${baseUrl}/api/users/${username}/posts`;
             break;
           case "comments":
-            endpoint = `${baseUrl}/users/${username}/comments`;
+            endpoint = `${baseUrl}/api/users/${username}/comments`;
             break;
           case "saved":
-            endpoint = `${baseUrl}/users/${username}/saved`;
+            endpoint = `${baseUrl}/api/users/${username}/saved`;
             break;
           case "upvoted":
-            endpoint = `${baseUrl}/users/${username}/voted?type=upvoted`;
+            endpoint = `${baseUrl}/api/users/${username}/voted?type=upvoted`;
             break;
           case "downvoted":
-            endpoint = `${baseUrl}/users/${username}/voted?type=downvoted`;
+            endpoint = `${baseUrl}/api/users/${username}/voted?type=downvoted`;
             break;
           default:
-            endpoint = `${baseUrl}/users/${username}/posts`;
+            endpoint = `${baseUrl}/api/users/${username}/posts`;
         }
 
         const res = await fetch(endpoint, { headers });
